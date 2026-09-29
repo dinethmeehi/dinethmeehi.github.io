@@ -10,19 +10,23 @@ A personal portfolio website for **Dineth Meehitiya**, a 2D/3D artist (Melbourne
 
 There are **two versions** of the site in this repo:
 
-1. **`portfolio.html`** (v1) — a complete, working, single-page scrolling portfolio. Fully finished and content-complete. This is the "safe" fallback.
-2. **`portfolio_v2.html`** (v2, in progress) — the new SPA-style rebuild described below. This is the **active direction** the person wants to keep pushing forward. It reuses v1's assets and data but restructures the whole experience.
+1. **`claude-md-project/portfolio.html`** (v1) — a complete, working, single-page scrolling portfolio. Fully finished and content-complete. This is the "safe" fallback.
+2. **`index.html`** (v2, in progress; this is the file that used to be called `portfolio_v2.html`, living in `claude-md-project/` — see the repo-root move below) — the new SPA-style rebuild described below. This is the **active direction** the person wants to keep pushing forward. It reuses v1's assets and data but restructures the whole experience.
 
-**Treat v2 as the priority.** v1 should be kept around as a reference/fallback but is not where new feature work should go unless the person says otherwise.
+**Treat v2 (`index.html`) as the priority.** v1 should be kept around as a reference/fallback but is not where new feature work should go unless the person says otherwise.
 
-`portfolio.html` (v1) is still a **single, self-contained HTML file** (everything base64-inlined, no build step, no framework).
+`claude-md-project/portfolio.html` (v1) is still a **single, self-contained HTML file** (everything base64-inlined, no build step, no framework).
 
-**`portfolio_v2.html` is no longer single-file (FEATURE_LOG #79).** It was 34.86 MB / ~27 MB gzipped and loaded very slowly on phones (a ~1.3 s+ parse of a 26 MB inline `<script>`, ~300 MB JS heap → tab evictions on low-RAM devices). The three big blobs were pulled out to sibling files in `claude-md-project/`:
+**`index.html` is no longer single-file (FEATURE_LOG #79).** Back when it was `portfolio_v2.html` it was 34.86 MB / ~27 MB gzipped and loaded very slowly on phones (a ~1.3 s+ parse of a 26 MB inline `<script>`, ~300 MB JS heap → tab evictions on low-RAM devices). The three big blobs were pulled out to sibling files (now at the **repo root**, alongside `index.html` itself — see the move below):
 - **`work-data.js`** (`window.__WORK_DATA = [...]`, ~8.6 MB) — the `WORK_DATA` image gallery. Loaded by a plain blocking `<script src>` right before the inline block; `const WORK_DATA = window.__WORK_DATA || []`.
 - **`orb-models.js`** (`window.__ORB_MODELS = {...}`, ~19 MB) — the 5 FBX orb models. Loaded **`defer`** (non-blocking); `initOrb()` builds the orbs without their inner model (an empty `THREE.Group()` placeholder — *not* the picsum fallback, which stays reserved for a real parse failure), then `hydrateOrbModels()` swaps the real FBX in on the `orbmodelsready` event that `orb-models.js` dispatches, disposing the placeholders and nulling `window.__ORB_MODELS` / `ORB_MODEL_B64` (now a `let`) to free the ~19 MB.
 - **`bg.mp4`** (~5.5 MB) + **`bg-poster.jpg`** (~0.5 MB) — `#bg-layer`'s `<source src>` / `poster` (were base64).
 
-Result: `portfolio_v2.html` is **~344 KB (~173 KB gzipped)**, `domInteractive` ~1.3 s → ~0.15 s locally, JS heap ~300 MB → ~65 MB. Still embedded inline: the Retron2000 `@font-face` (~31 KB) and the About-screen portrait (~one JPEG). The four new files are committed to the repo and served by GitHub Pages like any other asset. All were extracted losslessly from the old base64 via `perl -MMIME::Base64`.
+Result: `index.html` is **~344 KB (~173 KB gzipped)**, `domInteractive` ~1.3 s → ~0.15 s locally, JS heap ~300 MB → ~65 MB. Still embedded inline: the Retron2000 `@font-face` (~31 KB) and the About-screen portrait (~one JPEG). The sibling files are committed to the repo and served by GitHub Pages like any other asset. All were extracted losslessly from the old base64 via `perl -MMIME::Base64`.
+
+**Repo restructure + URL fix (FEATURE_LOG #84).** The site used to be reachable only via `https://dinethmeehi.github.io/portfolio/claude-md-project/portfolio_v2.html`, with a meta-refresh redirect stub at the repo root `index.html`. The person asked for a clean root URL instead. Two changes made this possible:
+1. **The GitHub repo was renamed** `portfolio` → **`dinethmeehi.github.io`** — this is the *only* way GitHub Pages serves a repo at the bare `https://<username>.github.io/` root instead of `https://<username>.github.io/<reponame>/`; it's a hard platform rule, not a settings toggle. The old project-page URL (`.../portfolio/...`) no longer resolves — the person explicitly accepted this.
+2. **The deployed files were moved from `claude-md-project/` to the true repo root**: `portfolio_v2.html` → `index.html`, plus its siblings `work-data.js`, `orb-models.js`, `bg.mp4`, `bg-poster.jpg`, `Dineth_Meehitiya_Resume.pdf`. This makes `index.html` the real page at `https://dinethmeehi.github.io/` with no redirect — the old meta-refresh stub is gone. `claude-md-project/` now holds only non-deployed material: `portfolio.html` (v1), `data/work-data.json`, `CLAUDE.md` (this file), and `docs/`. The local dev server (`.claude/serve.ps1`) was repointed at the repo root to match — **there is now only one copy of the deployed files**, not two that could drift out of sync. The `<title>` tag was also changed to **"Dineth Meehitiya | Portfolio"** (was "Dineth Meehitiya — 2D & 3D Artist") per the person's explicit ask.
 
 ## Who this is for
 
@@ -183,11 +187,20 @@ The particle-burst system, scroll/mouse background parallax, and font/colour sys
 
 ## Files in this repo
 
+**Repo root (deployed — served directly by GitHub Pages, FEATURE_LOG #84):**
+- `index.html` — v2, in-progress SPA rebuild (active priority; this is the file described throughout this doc, formerly `claude-md-project/portfolio_v2.html`).
+- `work-data.js`, `orb-models.js`, `bg.mp4`, `bg-poster.jpg`, `Dineth_Meehitiya_Resume.pdf` — `index.html`'s externalized assets (see "Current state" above). All referenced by plain relative filename, so they must stay siblings of `index.html`.
+
+**`claude-md-project/` (not deployed — docs, v1 fallback, and source data):**
 - `portfolio.html` — v1, finished single-scroll site (fallback/reference).
-- `portfolio_v2.html` — v2, in-progress SPA rebuild (active priority).
 - `data/work-data.json` — extracted real content data (see Data model above).
+- `CLAUDE.md` — this file.
 - `docs/DESIGN_SYSTEM.md` — full colour/type/effect reference.
 - `docs/FEATURE_LOG.md` — chronological log of every feature request and decision made, in order, with rationale where relevant. Read this if you need to understand *why* something is built the way it is, or whether a past decision was later reversed/corrected.
-- `Background vfx/45947-447087546_medium.mp4` — source clip for the looping `#bg-layer` background video (embedded as base64 in `portfolio_v2.html`; kept on disk as the original/reference).
-- `Logo/cover logo background DM.png`, `Logo/Logo DM.png` — source brand-mark PNGs originally used for the `#cover-screen` intro splash (`#cover-screen` was later rebuilt as inline SVG, see FEATURE_LOG #47) and the header `.nav-logo` (removed entirely in FEATURE_LOG #67 — the header is plain text now) respectively. Neither is embedded in `portfolio_v2.html` any more; kept on disk as originals/reference only.
-- `Orbs/18566403695347.jpg`, `Orbs/18566403695347.eps`, `Orbs/orb-texture-900.jpg` — licensed stock "thin line sphere" asset (original 6000×3375 jpg + vector eps, and a 900×900 centre-crop of the jpg made via .NET `System.Drawing` through PowerShell, no Python/ImageMagick available in this environment). **Tried as an orb texture, then dropped** — see Known gaps — the orbs now use a procedural wireframe material instead. Kept on disk in case a texture-based approach is revisited, but currently unused by `portfolio_v2.html`.
+
+**Repo root, non-deployed source/reference material:**
+- `Background vfx/45947-447087546_medium.mp4` — source clip for the looping `#bg-layer` background video (embedded as base64 in `index.html` until FEATURE_LOG #79 externalized it to `bg.mp4`; kept on disk as the original/reference, distinct from the deployed `bg.mp4`).
+- `Logo/cover logo background DM.png`, `Logo/Logo DM.png` — source brand-mark PNGs originally used for the `#cover-screen` intro splash (`#cover-screen` was later rebuilt as inline SVG, see FEATURE_LOG #47) and the header `.nav-logo` (removed entirely in FEATURE_LOG #67 — the header is plain text now) respectively. Neither is embedded in `index.html` any more; kept on disk as originals/reference only.
+- `Orbs/18566403695347.jpg`, `Orbs/18566403695347.eps`, `Orbs/orb-texture-900.jpg` — licensed stock "thin line sphere" asset (original 6000×3375 jpg + vector eps, and a 900×900 centre-crop of the jpg made via .NET `System.Drawing` through PowerShell, no Python/ImageMagick available in this environment). **Tried as an orb texture, then dropped** — see Known gaps — the orbs now use a procedural wireframe material instead. Kept on disk in case a texture-based approach is revisited, but currently unused by `index.html`.
+
+**Known clutter — stale root-level duplicates (not cleaned up, flagged but not deleted without being asked):** the repo root also has its own `CLAUDE.md`, `FEATURE_LOG.md`, and `DESIGN_SYSTEM.md` (dated ~Aug 9, well before this project moved into `claude-md-project/` and long before FEATURE_LOG #79/#83/#84) — these are abandoned early-era copies, **not** kept in sync, and should be ignored/treated as dead. The actively maintained docs are the `claude-md-project/CLAUDE.md` / `claude-md-project/docs/*.md` files described above. Worth a cleanup pass at some point, but wasn't part of what was asked when this was discovered.

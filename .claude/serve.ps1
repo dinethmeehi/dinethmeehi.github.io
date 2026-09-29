@@ -1,5 +1,5 @@
 param(
-    [string]$RootDir = "D:\Portfoilo\Website Portfilo\claude-md-project",
+    [string]$RootDir = "D:\Portfoilo\Website Portfilo",
     [int]$Port = $(if ($env:PORT) { [int]$env:PORT } else { 5173 })
 )
 
@@ -31,7 +31,7 @@ while ($listener.IsListening) {
     $response = $context.Response
     try {
         $relPath = [System.Uri]::UnescapeDataString($request.Url.AbsolutePath)
-        if ($relPath -eq "/") { $relPath = "/portfolio_v2.html" }
+        if ($relPath -eq "/") { $relPath = "/index.html" }
         $filePath = Join-Path $RootDir ($relPath.TrimStart("/"))
 
         if (Test-Path $filePath -PathType Leaf) {
